@@ -1,0 +1,250 @@
+import java.util.Arrays;
+import java.util.Stack;
+import java.io.Console;
+import java.lang.Character;
+import java.lang.Integer;
+
+/**
+ * This program serves as a text editor to be used with
+ * the command prompt interface.  Just by hitting enter after typing some text, 
+ * the user can add a line of text to memory.  Then, the user
+ * can type a command beginning with "#" such as, "#print,"
+ * "#print x" for a specified line to be printed, "#delete," "#delete x"
+ * for deleting a specified line number, and "#exit" to end the program.
+ * The data structure utilized is an array-based Stack.  
+ * @author David Mandelbaum
+ * @version 3.0 hw4 started: 10/9/16 completed: 10/13/16
+ * 
+ */
+public class textEditor3 extends Stack<String>{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	//Stack<String> stack = new Stack<String>();
+	static private int top = 0;
+	static private String[] data = new String[10];
+	static private int count = 0;
+	/**
+	 * Main method. Start a new text editor.
+	 * @param args
+	 */
+	public static void main(String[] args){
+		Stack<String> stack = new Stack<String>();
+		Console c = System.console();//https://docs.oracle.com/javase/tutorial/essential/io/cl.html
+		if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+		getArgs(c, stack);
+	}
+	
+	/**
+	 * getArgs will access the text input and determine what to do with it.
+	 * @param Console c and Stack<String> stack
+	 */
+	public static void getArgs(Console c, Stack<String> stack)
+	{
+		String command = c.readLine("> ");//prompt user to begin
+		if (command.startsWith("#") == false)//must be a text to store
+		{
+			stack.push(command);//store it
+			count++;//one more item being stored
+		}
+		
+		else if(command.equals("#print"))//print whole list
+		{
+		 	print(stack, count);//pass off to print method
+		}
+		
+		else if(command.startsWith("#print ") && Character.isDigit(command.charAt(7)))//http://stackoverflow.com/questions/18019584/checking-if-a-string-starts-and-ends-with-number-characters-using-regex
+		{//print a specific line
+			int lineToPrint = Integer.parseInt(command.substring(7));//figure out which line to print
+			printOneLine(lineToPrint, stack);//pass off to print one line method
+		}
+		
+		else if(command.equals("#delete"))//delete contents stored
+		{
+			 delete(stack);//pass off to delete whole contents method
+		}
+		
+		else if(command.startsWith("#delete ") && Character.isDigit(command.charAt(8)))
+		{//delete specific line number
+				int lineToDelete = Integer.parseInt(command.substring(8));//line number to delete
+				deleteOneLine(lineToDelete, stack);//pass off to delete one line method
+		}
+		
+		else if(command.equals("#exit"))//end program
+		{
+				System.exit(1);
+		}
+		
+		else
+		{
+			System.out.println("Unable to process entry, try again in correct format");
+		}//something was entered incorrectly
+		
+		getArgs(c, stack);//get the next line
+	}
+	
+	/**
+	 * Print the entire contents stored.
+	 * @param stack being used to store, count of how many contents already stored
+	 */
+	public static void print(Stack<String> stack, int count)
+	{
+		if (stack.empty())//nothing there
+		{
+			System.out.println();//print empty line showing nothing to print
+		}
+		else{//something there to print
+			Stack<String> temp = new Stack<String>();//create temporary stack
+			//move all the contents that came after line to print
+			//into the temp stack
+			for(int i= 0; i <= count-1; i++)
+			{
+				String line = stack.pop();
+				temp.push(line);
+			}
+			//print each line from temp stack then put it back in original stack
+			for(int j = 0; j <= count-1; j++)
+			{
+				String toPrint = temp.pop();
+				if (toPrint != null)
+				{
+					System.out.println(toPrint);
+				}
+				stack.push(toPrint);//put back in original stack
+			}
+		}
+		
+	}
+	
+	/**
+	 * Delete all contents.
+	 * @param stack
+	 */
+	public static void delete(Stack<String> stack)
+	{
+		for (int i= 0; i< count; i++)
+		{
+            stack.pop();//pop each one off of stack
+        }
+		count = 0;//reset number of contents to zero
+	}
+	
+	/**
+	 * Push entry onto stack. Array based.
+	 * @param item to push, data array being used
+	 */
+	public void push(String item, String[] data)//from slides
+	{
+		if(top == data.length-1)
+		{//array doubling to make array larger if full, from BICA 1 slides
+			String[] newArray = new String[data.length * 2];
+			for (int i= 0; i< newArray.length-1; i++)
+	        {
+	            newArray[i] = null;
+	        }
+			int a = 0;
+			int b = 0;
+			while (a <= data.length-1)
+			{
+				newArray[b] = data[a];
+				b++;
+				a++;
+			}
+			data = newArray;
+			push(item);
+		}
+		if (count == 0)//first item being added
+		{
+			data[top] = item;
+		}
+		else//at least 1 item already stored
+		{
+			top++;
+			data[top] = item;
+		}
+	}
+	
+	/**
+	 * Pop entry off of stack. Array based.
+	 * @param item to push, data array being used
+	 */
+	public String pop(String[] data)//from slides
+	{
+		if (top == -1)
+		{
+			return null;
+		}
+		//take off item from top
+		String item = data[top];
+		data[top] = null;
+		top--;
+		return item;
+	}
+	
+	/**
+	 * Print only specific line.
+	 * @param lineToPrint the specified line to print, stack being used
+	 */
+	public static void printOneLine(int lineToPrint, Stack<String> stack)//based off of slides from ICA 4
+	{
+		if (count > 0 && lineToPrint <= count)
+		{
+			int numberToPrint = count - lineToPrint;
+			Stack<String> temp = new Stack<String>();//create temporary stack
+			//move all the entries that came after line to print
+			//into the temp stack
+			for(int i= 0; i < numberToPrint; i++)
+			{
+				String line = stack.pop();
+				temp.push(line);
+			}
+			//Print the specified line
+			String lineWeWant = stack.pop();
+			System.out.println(lineWeWant);
+			stack.push(lineWeWant);//put it back into original stack
+			//put the later entries back into our original stack
+			for(int i= 0; i < numberToPrint; i++)
+			{
+				String line= temp.pop();
+				stack.push(line);
+			}
+		}
+		else 
+		{//non-existent line requested
+			System.out.println("Line requested does not exist as of now");
+		}
+	}
+	
+	/**
+	 * Delete only specific line.
+	 * @param lineToDelete the line to delete, stack being used
+	 */
+	private static void deleteOneLine(int lineToDelete, Stack<String> stack) 
+	{
+		if (count > 0 && lineToDelete <=count)//valid line-deletion request
+		{
+			int numberToDelete = count - lineToDelete;
+			Stack<String> temp = new Stack<String>();//create temporary stack
+			//move all the actions that came after line to delete
+			//into the temp stack
+			for(int i= 0; i < numberToDelete; i++)
+			{
+				String line = stack.pop();
+				temp.push(line);
+			}
+			//delete the line requested
+			stack.pop();
+			//put the later entries back into our original stack
+			for(int i= 0; i < numberToDelete; i++)
+			{
+				String line= temp.pop();
+				stack.push(line);
+			}
+		}
+		count--;//now stack contains 1 line less than before
+	}
+}
